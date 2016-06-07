@@ -38,11 +38,20 @@ public class PluginPlugin extends BaseHPPlugin {
 
             resolveDependencies()
 
+            applySignConfig()
+
             project.android.applicationVariants.all { variant ->
                 // While release variant created, everything of `Android Plugin' should be ready
                 // and then we can do some extensions with it
                 configureVariant(variant)
             }
+        }
+    }
+
+    private void applySignConfig() {
+        hostProject.android.buildTypes.each {
+            def bt = project.android.buildTypes[it.name]
+            bt.signingConfig = it.signingConfig
         }
     }
 
@@ -72,23 +81,6 @@ public class PluginPlugin extends BaseHPPlugin {
         if (!project.hasProperty(taskname)) {
             println "addTask: $taskname"
             project.task(taskname, dependsOn: "assemble${flavor}Release")
-        }
-
-        variant.assemble.doLast {
-            copyApkToHost(variant)
-        }
-    }
-
-    private void copyApkToHost(variant) {
-        pluginsDir = new File(hostProject.android.sourceSets.main.assets.srcDirs[0], "plugins")
-        if (!pluginsDir.exists()) {
-            pluginsDir.mkdirs()
-        }
-        def fromApkFile = variant.outputs[0].outputFile
-
-        project.copy {
-            from fromApkFile
-            into pluginsDir
         }
     }
 
