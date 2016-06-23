@@ -29,6 +29,7 @@ uploadArchives {
 task bintrayUpload(type: GradleBuild) {
     buildFile = 'bintray.gradle'
     tasks = ['bintrayUpload']
+
 }
 
 //--------------------------------------------------------------------------------------------------

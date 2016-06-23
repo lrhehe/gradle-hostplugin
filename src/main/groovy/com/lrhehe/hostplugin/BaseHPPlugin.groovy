@@ -39,14 +39,14 @@ public class BaseHPPlugin extends AndroidPlugin {
         super.apply(project)
         HPBUILD = project.hasProperty(BUILD_FLAG)
 
-        if(project == project.rootProject) {
+        if (project == project.rootProject) {
             return
         }
         host = project.rootProject.host
         plugin = project.rootProject.plugin
         pluginLibs = project.rootProject.pluginLibs
         interDir = new File(project.buildDir, FD_INTERMEDIATES)
-        explodedAarDir =  new File(interDir, FD_EXPLODED_AAR)
+        explodedAarDir = new File(interDir, FD_EXPLODED_AAR)
         hostProject = project.rootProject.project(host)
         prepareLibsDir = new File(hostProject.buildDir, PREPAREDIR)
         providedLibsDir = new File(project.projectDir, PROVIDEDDIR)
@@ -94,21 +94,32 @@ public class BaseHPPlugin extends AndroidPlugin {
     protected void prepareProvidedLibs() {
         println providedLibs
         providedLibs.forEach({
-            def jarFile = getDenpendencyJarFile(it)
+            def jarFiles = getDenpendencyJarFile(it)
             def destFileName
             if (it instanceof File) {
                 destFileName = it.name
             } else {
                 destFileName = getJarName(it)
             }
-            println jarFile
+            println jarFiles
 
-            if (jarFile.exists()) {
-                println "copy:$jarFile to $providedLibsDir"
-                project.copy {
-                    from jarFile
-                    into providedLibsDir
-                    rename (jarFile.name, destFileName)
+            if (!jarFiles.isEmpty()) {
+                println "copy:$jarFiles to $providedLibsDir"
+                jarFiles.each {
+                    def srcFile = it
+                    if (srcFile.name.equals("classes.jar")) {
+                        project.copy {
+                            from srcFile
+                            into providedLibsDir
+                            rename(srcFile.name, destFileName)
+
+                        }
+                    } else {
+                        project.copy {
+                            from srcFile
+                            into providedLibsDir
+                        }
+                    }
                 }
             }
         })
@@ -134,17 +145,26 @@ public class BaseHPPlugin extends AndroidPlugin {
         return "${it.name}-${it.version}.jar"
     }
 
-    File getDenpendencyJarFile(it) {
-        def jarFile
+    def getDenpendencyJarFile(it) {
+        def jarFiles = []
         if (it instanceof Project || it instanceof Dependency) {
-            jarFile = new File(explodedAarDir, "$it.group/$it.name/$it.version/jars/classes.jar")
+            File jars = new File(explodedAarDir, "$it.group/$it.name/$it.version/jars");
+            jarFiles.add(new File(jars, "classes.jar"))
+            File libs = new File(jars, "libs");
+            if (libs.exists()) {
+                for (File file : libs.listFiles()) {
+                    if (file.name.endsWith(".jar")) {
+                        jarFiles.add(file)
+                    }
+                }
+            }
         }
-        if (jarFile == null || !jarFile.exists()) {
+        if (jarFiles.isEmpty()) {
             // for external dependency
-            jarFile = new File(prepareLibsDir, getJarName(it))
-            println jarFile
+            jarFiles.add(new File(prepareLibsDir, getJarName(it)))
+            println jarFiles
         }
-        return jarFile
+        return jarFiles
     }
 
     protected boolean shouldAddToProvidedLibs(it) {
