@@ -9,9 +9,6 @@ import org.gradle.api.Project
 public class PluginPlugin extends BaseHPPlugin {
 
     def mBakBuildFile
-    def hostLibs
-    def pluginsDir
-
 
     @Override
     public void apply(Project project) {
@@ -21,13 +18,7 @@ public class PluginPlugin extends BaseHPPlugin {
             return
         }
 
-        hostLibs = new File(hostProject.projectDir, "providedLibs")
-
         mBakBuildFile = new File(project.buildFile.parentFile, "${project.buildFile.name}~")
-
-        if (!hostLibs.exists()) {
-            hostLibs.mkdir()
-        }
 
         project.beforeEvaluate {
             changeBuildFile()

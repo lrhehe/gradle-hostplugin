@@ -49,13 +49,9 @@ public class BaseHPPlugin extends AndroidPlugin {
         explodedAarDir = new File(interDir, FD_EXPLODED_AAR)
         hostProject = project.rootProject.project(host)
         prepareLibsDir = new File(hostProject.buildDir, PREPAREDIR)
-        providedLibsDir = new File(project.projectDir, PROVIDEDDIR)
+        providedLibsDir = new File(project.buildDir, PROVIDEDDIR)
         if (!prepareLibsDir.exists()) {
             prepareLibsDir.mkdirs()
-        }
-
-        project.task("clean").doLast {
-            clean()
         }
     }
 
@@ -169,14 +165,5 @@ public class BaseHPPlugin extends AndroidPlugin {
 
     protected boolean shouldAddToProvidedLibs(it) {
         return false
-    }
-
-    void clean() {
-        if (providedLibsDir.exists()) {
-            providedLibsDir.deleteDir()
-        }
-        if (prepareLibsDir.exists()) {
-            prepareLibsDir.deleteDir()
-        }
     }
 }
